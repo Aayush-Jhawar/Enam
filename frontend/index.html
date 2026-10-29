@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>FINN | Financial Investment Agent — ENAM Holdings</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Custom Editorial Stylesheet -->
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="bg-[#090D16] text-[#F8FAFC]">
+
+  <div id="appContainer" class="phone-viewport-container">
+
+    <!-- Top Institutional Header -->
+    <header class="sticky top-0 z-40 bg-[#0F172A]/90 backdrop-blur-md border-b border-white/10 px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center font-bold text-white shadow-lg shadow-amber-500/20">
+          F
+        </div>
+        <div>
+          <div class="flex items-center space-x-1.5">
+            <h1 class="text-base font-bold tracking-tight text-white leading-none">FINN</h1>
+            <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">ENAM</span>
+          </div>
+          <p class="text-[10px] text-slate-400 font-medium">Primary-Source Investment Agent</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <!-- Live Compute Cost Badge -->
+        <div id="costBadge" class="hidden sm:flex items-center space-x-1 px-2 py-1 rounded-md bg-white/5 border border-white/10 text-[11px] mono text-slate-300">
+          <i data-lucide="cpu" class="w-3 h-3 text-amber-400"></i>
+          <span id="costDisplay">$0.00</span>
+        </div>
+
+        <!-- Alert Notification Bell -->
+        <button id="alertBellBtn" class="relative p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 transition-colors">
+          <i data-lucide="bell" class="w-4 h-4"></i>
+          <span id="unreadAlertBadge" class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center hidden">0</span>
+        </button>
+
+        <!-- Viewport Mode Switcher (Mobile / Wide) -->
+        <button id="viewportToggleBtn" title="Toggle Mobile / Full Width" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 hover:text-white transition-colors">
+          <i data-lucide="smartphone" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Top Alert Banner (Breaches) -->
+    <div id="topAlertBanner" class="px-4 py-2 bg-gradient-to-r from-red-500/15 via-amber-500/10 to-transparent border-b border-red-500/20 flex items-center justify-between hidden">
+      <div class="flex items-center space-x-2 overflow-hidden">
+        <i data-lucide="alert-triangle" class="w-4 h-4 text-red-400 shrink-0"></i>
+        <p id="topAlertText" class="text-xs text-red-200 font-medium truncate">Alert triggered</p>
+      </div>
+      <button id="dismissTopAlertBtn" class="text-xs text-slate-400 hover:text-white ml-2 shrink-0">Dismiss</button>
+    </div>
+
+    <!-- Main Content Area (Tabbed Views) -->
+    <main class="flex-1 pb-20 overflow-y-auto px-4 py-4 space-y-4">
+
+      <!-- ================================================================= -->
+      <!-- TAB 1: PUSH MODE (Windowed Digest & Prioritized Feed)              -->
+      <!-- ================================================================= -->
+      <section id="pushView" class="space-y-4 animate-fade">
+
+        <!-- Time Window & Filter Controls -->
+        <div class="flex flex-col space-y-2">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider flex items-center space-x-1.5">
+              <i data-lucide="inbox" class="w-4 h-4 text-amber-400"></i>
+              <span>Windowed Digest</span>
+            </h2>
+            <div class="inline-flex p-0.5 rounded-lg bg-slate-900 border border-white/10 text-xs">
+              <button data-window="24" class="window-btn px-2.5 py-1 rounded-md font-medium text-white bg-amber-500/20 text-amber-300">24h</button>
+              <button data-window="48" class="window-btn px-2.5 py-1 rounded-md font-medium text-slate-400 hover:text-white">48h</button>
+              <button data-window="168" class="window-btn px-2.5 py-1 rounded-md font-medium text-slate-400 hover:text-white">7d</button>
+            </div>
+          </div>
+
+          <!-- Category Quick Filter Chips -->
+          <div class="flex items-center space-x-1.5 overflow-x-auto py-1 no-scrollbar text-xs">
+            <button data-filter="all" class="filter-chip px-2.5 py-1 rounded-full bg-white/10 text-white font-medium whitespace-nowrap">All Events</button>
+            <button data-filter="results" class="filter-chip px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white whitespace-nowrap">Results (QoQ/YoY)</button>
+            <button data-filter="management_change" class="filter-chip px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white whitespace-nowrap">Executive Bios</button>
+            <button data-filter="M&A" class="filter-chip px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white whitespace-nowrap">M&A / Restructuring</button>
+            <button data-filter="litigation" class="filter-chip px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white whitespace-nowrap">Litigation</button>
+          </div>
+        </div>
+
+        <!-- Executive Window Summary Card -->
+        <div id="digestSummaryCard" class="glass-card highlight p-3.5 space-y-1.5">
+          <div class="flex items-center justify-between text-xs text-amber-400 font-semibold tracking-wide uppercase">
+            <span class="flex items-center space-x-1">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+              <span>AI Executive Synthesis</span>
+            </span>
+            <span id="digestMetaStats" class="mono text-slate-400 font-normal">--</span>
+          </div>
+          <p id="digestSummaryText" class="text-xs text-slate-300 leading-relaxed">
+            Aggregating primary corporate disclosures across portfolio companies...
+          </p>
+        </div>
+
+        <!-- Feed List of Prioritized Announcements -->
+        <div id="announcementFeed" class="space-y-3">
+          <!-- Dynamically Injected Cards -->
+          <div class="text-center py-8 text-slate-500 text-xs">Loading primary corporate announcements...</div>
+        </div>
+
+        <!-- Collapsed Paperwork Accordion -->
+        <div id="collapsedPaperwork" class="hidden">
+          <button id="togglePaperworkBtn" class="w-full py-2 px-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-400 flex items-center justify-between transition-colors">
+            <span id="collapsedCountText">Routine Administrative Paperwork (0)</span>
+            <i data-lucide="chevron-down" class="w-4 h-4"></i>
+          </button>
+          <div id="paperworkList" class="mt-2 space-y-2 hidden"></div>
+        </div>
+
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- TAB 2: PULL MODE (Deep Primary Fundamental Research)              -->
+      <!-- ================================================================= -->
+      <section id="pullView" class="space-y-4 animate-fade hidden">
+
+        <!-- Universal Ticker Search -->
+        <div class="space-y-2">
+          <div class="relative">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+            <input 
+              id="tickerSearchInput" 
+              type="text" 
+              placeholder="Research any NSE ticker (e.g. TCS, RELIANCE, ZOMATO, SBIN)..." 
+              class="w-full pl-9 pr-24 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 uppercase font-medium"
+            >
+            <button id="executeSearchBtn" class="absolute right-1.5 top-1.5 bottom-1.5 px-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs transition-colors flex items-center space-x-1">
+              <span>Analyze</span>
+            </button>
+          </div>
+
+          <!-- Quick Stock Chip Bar -->
+          <div class="flex items-center space-x-1.5 overflow-x-auto py-1 no-scrollbar text-xs">
+            <span class="text-slate-500 font-medium shrink-0">Demo Watch:</span>
+            <button data-ticker="TCS" class="ticker-chip px-2.5 py-1 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 mono font-semibold">TCS</button>
+            <button data-ticker="RELIANCE" class="ticker-chip px-2.5 py-1 rounded-md bg-white/5 hover:bg-white/10 text-slate-300 mono">RELIANCE</button>
+            <button data-ticker="ZOMATO" class="ticker-chip px-2.5 py-1 rounded-md bg-white/5 hover:bg-white/10 text-slate-300 mono">ZOMATO</button>
+            <button data-ticker="TATAMOTORS" class="ticker-chip px-2.5 py-1 rounded-md bg-white/5 hover:bg-white/10 text-slate-300 mono">TATAMOTORS</button>
+            <button data-ticker="HDFCBANK" class="ticker-chip px-2.5 py-1 rounded-md bg-white/5 hover:bg-white/10 text-slate-300 mono">HDFCBANK</button>
+            <button data-ticker="BAJFINANCE" class="ticker-chip px-2.5 py-1 rounded-md bg-white/5 hover:bg-white/10 text-slate-300 mono">BAJFINANCE</button>
+          </div>
+        </div>
+
+        <!-- Active Company Header Card -->
+        <div id="companyHeaderCard" class="glass-card p-4 space-y-2">
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="flex items-center space-x-2">
+                <h3 id="targetTicker" class="text-lg font-bold text-white mono leading-none">TCS</h3>
+                <span id="targetSector" class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-white/10">IT Services</span>
+              </div>
+              <p id="targetName" class="text-xs text-slate-400 mt-1">Tata Consultancy Services Limited</p>
+            </div>
+            <div class="text-right">
+              <div id="targetPrice" class="text-base font-bold mono text-white">₹4,020.00</div>
+              <div id="targetChange" class="text-xs mono font-semibold text-emerald-400">+1.20%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 8 Research Module Tabs (Horizontal scrollable) -->
+        <div class="flex items-center space-x-2 overflow-x-auto pb-1 border-b border-white/10 no-scrollbar text-xs">
+          <button data-module="narrative_vs_numbers" class="module-tab pb-2 font-semibold text-amber-400 border-b-2 border-amber-400 whitespace-nowrap flex items-center space-x-1">
+            <i data-lucide="target" class="w-3.5 h-3.5"></i>
+            <span>Narrative vs Numbers ★</span>
+          </button>
+          <button data-module="financial_snapshot" class="module-tab pb-2 font-medium text-slate-400 hover:text-white whitespace-nowrap">Financial Snapshot</button>
+          <button data-module="business_snapshot" class="module-tab pb-2 font-medium text-slate-400 hover:text-white whitespace-nowrap">Business Model</button>
+          <button data-module="trajectory" class="module-tab pb-2 font-medium text-slate-400 hover:text-white whitespace-nowrap">3-Yr Trajectory</button>
+          <button data-module="balance_sheet" class="module-tab pb-2 font-medium text-slate-400 hover:text-white whitespace-nowrap">Balance Sheet</button>
+          <button data-module="cash_quality" class="module-tab pb-2 font-medium text-slate-400 hover:text-white whitespace-nowrap">Cash Quality</button>
+          <button data-module="guidance" class="module-tab pb-2 font-medium text-slate-400 hover:text-white whitespace-nowrap">Forward Guidance</button>
+          <button data-module="bull_vs_bear" class="module-tab pb-2 font-medium text-slate-400 hover:text-white whitespace-nowrap">Bull vs Bear</button>
+        </div>
+
+        <!-- Active Research Module Content Container -->
+        <div id="moduleContentArea" class="space-y-3">
+          <!-- Dynamically populated module view -->
+        </div>
+
+        <!-- Primary Source Provenance Drawer -->
+        <div id="provenanceCard" class="p-3 rounded-lg bg-slate-900/80 border border-white/5 space-y-1">
+          <div class="flex items-center space-x-1.5 text-[11px] text-slate-400 font-semibold uppercase tracking-wider">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>Primary Source Discipline</span>
+          </div>
+          <p id="citationsText" class="text-xs text-slate-400 leading-tight">
+            Grounded in audited FY24 Annual Report & Q2FY25 Concall Transcripts. Zero broker notes or secondary commentary.
+          </p>
+        </div>
+
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- TAB 3: PORTFOLIO (Holdings & Sector Breakdown)                     -->
+      <!-- ================================================================= -->
+      <section id="portfolioView" class="space-y-4 animate-fade hidden">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider flex items-center space-x-1.5">
+            <i data-lucide="briefcase" class="w-4 h-4 text-amber-400"></i>
+            <span>Mock Portfolio (20 Stocks)</span>
+          </h2>
+          <span class="text-xs mono text-slate-400">Large & Mid Cap Blend</span>
+        </div>
+
+        <!-- Holdings List -->
+        <div id="portfolioTable" class="space-y-2">
+          <!-- Dynamically populated list -->
+        </div>
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- TAB 4: ALERTS & CONFIG (Threshold Rules & Cost Tracker)           -->
+      <!-- ================================================================= -->
+      <section id="alertsView" class="space-y-4 animate-fade hidden">
+
+        <!-- Active Alerts Feed -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider flex items-center space-x-1.5">
+              <i data-lucide="bell" class="w-4 h-4 text-amber-400"></i>
+              <span>Active Threshold Breaches</span>
+            </h2>
+            <button id="refreshEodBtn" class="text-xs text-amber-400 hover:text-amber-300 font-medium">Re-evaluate EOD</button>
+          </div>
+          <div id="alertsFeedList" class="space-y-2">
+            <!-- Dynamically populated triggered alerts -->
+          </div>
+        </div>
+
+        <!-- Threshold Config Card -->
+        <div class="glass-card p-4 space-y-4">
+          <h3 class="text-xs font-semibold text-slate-200 uppercase tracking-wider flex items-center space-x-1.5">
+            <i data-lucide="sliders" class="w-4 h-4 text-amber-400"></i>
+            <span>Configurable Trigger Rules</span>
+          </h3>
+
+          <div class="space-y-3 text-xs">
+            <!-- Price Move Slider -->
+            <div class="space-y-1">
+              <div class="flex justify-between">
+                <span class="text-slate-300">Daily Price Move Threshold (±%)</span>
+                <span id="priceThresholdVal" class="mono font-semibold text-amber-400">±5.0%</span>
+              </div>
+              <input id="priceSlider" type="range" min="1" max="15" step="0.5" value="5.0" class="w-full accent-amber-400">
+            </div>
+
+            <!-- Volume Spike Slider -->
+            <div class="space-y-1">
+              <div class="flex justify-between">
+                <span class="text-slate-300">Volume Spike Multiplier (vs 20d Avg)</span>
+                <span id="volumeThresholdVal" class="mono font-semibold text-amber-400">2.0x</span>
+              </div>
+              <input id="volumeSlider" type="range" min="1.2" max="5.0" step="0.2" value="2.0" class="w-full accent-amber-400">
+            </div>
+
+            <button id="saveAlertConfigsBtn" class="w-full py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold transition-colors mt-2">
+              Save Preferences
+            </button>
+          </div>
+        </div>
+
+        <!-- Compute Cost Audit Card (Bonus Points Section) -->
+        <div class="glass-card p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-semibold text-slate-200 uppercase tracking-wider flex items-center space-x-1.5">
+              <i data-lucide="bar-chart-2" class="w-4 h-4 text-emerald-400"></i>
+              <span>Smart Model Routing & Cost Audit</span>
+            </h3>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">Free-Tier Optimized</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="p-2.5 rounded-lg bg-slate-900 border border-white/5">
+              <span class="text-slate-400 block text-[10px]">Total API Spend</span>
+              <span id="auditTotalCost" class="text-base font-bold mono text-white">$0.000000</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-900 border border-white/5">
+              <span class="text-slate-400 block text-[10px]">Total Tokens Processed</span>
+              <span id="auditTotalTokens" class="text-base font-bold mono text-white">0</span>
+            </div>
+          </div>
+
+          <p class="text-[11px] text-slate-400 leading-normal">
+            FINN implements smart model routing: high-volume announcement parsing runs on cheap models (Gemini Flash / GPT-4o-mini at $0.075/M tokens), reserving deep reasoning models only for Narrative vs Numbers synthesis.
+          </p>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Bottom Mobile-First Navigation Bar -->
+    <nav class="bottom-nav flex items-center justify-around py-2 px-2">
+      <button data-tab="pushView" class="nav-btn active flex flex-col items-center justify-center space-y-1 text-slate-400 hover:text-white transition-colors w-1/4">
+        <i data-lucide="radio" class="w-5 h-5"></i>
+        <span class="text-[10px] font-medium tracking-tight">Push Feed</span>
+      </button>
+
+      <button data-tab="pullView" class="nav-btn flex flex-col items-center justify-center space-y-1 text-slate-400 hover:text-white transition-colors w-1/4">
+        <i data-lucide="book-open" class="w-5 h-5"></i>
+        <span class="text-[10px] font-medium tracking-tight">Research</span>
+      </button>
+
+      <button data-tab="portfolioView" class="nav-btn flex flex-col items-center justify-center space-y-1 text-slate-400 hover:text-white transition-colors w-1/4">
+        <i data-lucide="pie-chart" class="w-5 h-5"></i>
+        <span class="text-[10px] font-medium tracking-tight">Portfolio</span>
+      </button>
+
+      <button data-tab="alertsView" class="nav-btn flex flex-col items-center justify-center space-y-1 text-slate-400 hover:text-white transition-colors w-1/4">
+        <i data-lucide="sliders-horizontal" class="w-5 h-5"></i>
+        <span class="text-[10px] font-medium tracking-tight">Alerts</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- Application Logic -->
+  <script src="/app.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,380 @@
+FINN - ENAM AI Engineer Build Challenge: Deep Brainstorm
+1. Challenge Deconstruction
+What Is ENAM Looking For?
+ENAM Holdings is Nemish Shah's firm - legendary value investors who do deep, primary-source, fundamental research. They are not momentum traders; they are patient, rigorous bottom-up investors. This context matters enormously for what "good" looks like:
+
+They want to see primary data discipline - not noise from news or broker notes
+They value judgment over completeness - what earns attention, what doesn't
+They want a product viewpoint, not a data dump
+Efficiency matters to them (they're value investors after all) - smart spending on compute earns bonus points
+The Core Tension: Push vs. Pull
+The challenge cleverly forces you to solve two fundamentally different problems:
+
+Dimension	Push Mode	Pull Mode
+Trigger	Time / event-driven	User query
+Data	EOD prices + exchange filings	Annual reports + concall transcripts
+LLM task	Classify, summarize, enrich, alert	RAG, analyze, compare, synthesize
+Latency	Can be async (nightly batch)	Must feel fast (<5s)
+Volume	High (many events)	Low (per stock)
+Cost	Must be cheap	Can spend more per query
+Key Constraints (Hard)
+Mobile-first - everything must work beautifully on a phone
+No broker notes / news for pull analysis - only annual reports and concall transcripts
+Must generalize - the engine must work on any NSE ticker, not just demo stocks
+Must run - a broken demo is the worst outcome
+Primary sources only for pull - no external LLM knowledge of company
+Grading Priorities (from the brief)
+Creativity + product sense + judgment (highest weight)
+Architecture quality
+Thin-but-working > broad-but-broken
+Compute efficiency (bonus)
+2. Data Architecture Analysis
+Source 1: Price & Volume (EOD)
+Best approach: yfinance
+
+python
+import yfinance as yf
+# For NSE: TICKER.NS, for BSE: TICKER.BO
+tickers = ["RELIANCE.NS", "TCS.NS", "INFY.NS", ...]
+data = yf.download(tickers, period="6mo", interval="1d")
+Derived signals to compute locally:
+
+20-day rolling average volume → compare today's volume
+20-day price volatility (std dev)
+Alert triggers: volume > 2x avg, price move > ±X% (user-configurable)
+Storage: SQLite or lightweight Parquet files, updated once daily post-market (NSE closes at 15:30 IST)
+
+Source 2: Corporate Announcements (NSE/BSE)
+Challenge: NSE is heavily bot-protected. BSE is somewhat easier.
+
+Strategy:
+
+Primary: NSE JSON endpoint after session cookie capture (nseindia.com/api/corporate-announcements?index=equities&symbol=RELIANCE)
+Fallback: NSE RSS feed (nsearchives.nseindia.com/content/RSS/Online_announcements.xml)
+BSE: bse Python library for BSE-listed stocks
+Classification pipeline:
+
+Raw announcement text → cheap LLM (Gemini Flash / GPT-4o-mini) → 17-category label
+Map to: results, M&A, fund_raise, management_change, litigation, insider_trading, earnings_call, investor_meetings, credit_rating, dividend, bonus_split, capex, press_release, postal_ballot, agm_egm, pledging, unclassified
+
+Priority logic:
+
+HIGH:   results, M&A, management_change, litigation, fund_raise
+MEDIUM: credit_rating, capex, dividend, insider_trading, pledging
+LOW:    press_release, investor_meetings, agm_egm, postal_ballot
+SKIP:   unclassified (collapsed/hidden in digest)
+Source 3: Fundamentals (screener.in)
+Plan:
+
+Scrape company page on screener.in to get links to:
+Annual report PDFs (last 3-5 years)
+Concall transcript PDFs/links (last 8-12 quarters)
+Download and parse PDFs
+Chunk + embed into vector DB (ChromaDB or FAISS - free, local)
+PDF parsing stack:
+
+pdfplumber for text-heavy documents
+PyMuPDF for layout-critical sections
+Special table extraction for financial statements
+RAG architecture:
+
+PDF → pdfplumber → semantic sections → chunk (2000 tok parent / 400 tok child)
+     → OpenAI text-embedding-3-small (cheap, good quality)
+     → ChromaDB (local, free)
+     → At query time: hybrid BM25 + vector search → rerank → LLM
+3. AI/LLM Pipeline Design
+Smart Model Routing (Cost Efficiency = Bonus Points)
+Task	Model	Rationale
+Announcement classification (bulk)	Gemini 1.5 Flash / GPT-4o-mini	Cheap, fast, 1M+ token context
+Announcement summarization (1-liner)	Gemini 1.5 Flash	Same
+Quarterly results extraction (Revenue, EBITDA, PBT, PAT)	GPT-4o-mini with structured output	JSON mode, reliable on tables
+Person bio enrichment (management change)	GPT-4o-mini / Perplexity API	Needs web access
+RAG-based pull analysis	GPT-4o or Claude Sonnet	Reasoning, synthesis, nuance
+Bull vs. Bear case	Claude Opus / GPT-4o	Critical thinking required
+Caching strategy:
+
+Cache annual report embeddings in ChromaDB persistently
+Cache announcement summaries in SQLite
+Cache company bio enrichments (change infrequently)
+Re-fetch price data daily only
+Push Engine Design
+1. Windowed Digest
+Trigger: User opens app / scheduled notification
+Input: All filings for portfolio companies in the last 24h (or custom window)
+Process:
+  1. Pull announcements from NSE/BSE for each portfolio stock
+  2. Classify each → priority label
+  3. Filter: Remove "unclassified" from main view
+  4. Summarize each in 1-2 lines (cheap LLM)
+  5. Enrich HIGH priority items deeper
+  6. Sort: HIGH → MEDIUM → LOW → (collapsed SKIP)
+Output: Ranked feed of cards
+2. Triggered Alerts
+Rules engine (configurable per user):
+
+python
+alerts = [
+  {"type": "price_move", "threshold": 5, "direction": "both"},  # ±5%
+  {"type": "volume_spike", "multiplier": 2.0},                   # 2x avg vol
+  {"type": "announcement", "categories": ["results", "M&A", "management_change"]},
+]
+Alert notification triggered after EOD data load (~16:00 IST daily).
+
+3. Pull Engine (8 Research Modules)
+All grounded in annual reports + concall transcripts only:
+
+User: "Research HDFC Bank"
+→ Check if embeddings exist in ChromaDB for HDFC
+→ If not: scrape screener.in → download PDFs → chunk → embed (background job ~2-3 mins)
+→ If yes: query ChromaDB with sub-queries for each requested module
+→ Synthesize across retrieved chunks
+→ Return structured report
+Sub-queries per module:
+
+Module	Sample RAG sub-queries
+Business snapshot	"What are the main business segments and revenue breakdown?"
+Financial snapshot	"What is current revenue, EBITDA margin, PAT, ROE?"
+Trajectory	"How have revenues and margins changed over the last 3-4 years?"
+Balance sheet	"What is the debt level, D/E ratio, working capital position?"
+Cash quality	"What is free cash flow? Does PAT convert to operating cash flow?"
+Narrative vs. numbers	"What did management guide for last year? What was actually delivered?"
+Guidance	"What growth, margin, and capex guidance has management given?"
+Bull vs. Bear	"What are the strongest growth drivers and risk factors?"
+The "Narrative vs. Numbers" module is the crown jewel - this is exactly what ENAM cares about (they're value investors who scrutinize management credibility). The algorithm:
+
+Extract all forward guidance statements from last 4 concall transcripts (using structured extraction)
+Extract the actual delivered numbers from the subsequent quarterly results filings
+Compare point by point: "Guided 15-20% revenue growth" → "Delivered 8% growth"
+Flag overperformance/underdelivery patterns
+Summarize management's track record of honest guidance
+4. Portfolio Selection Strategy
+Goal: Pick 15-20 companies that create an interesting, diverse demo
+
+Recommended mix demonstrating different scenarios:
+
+Company	Sector	Demo value
+RELIANCE.NS	Conglomerate	Complex segments, lots of filings
+TCS.NS	IT Services	Strong concall commentary, good guidance track
+HDFC Bank.NS	Banking	Balance sheet heavy, NIM discussions
+Bajaj Finance.NS	NBFC	High growth, management guidance rich
+Zomato.NS	Consumer Tech	Path-to-profitability narrative vs. numbers
+Tata Motors.NS	Auto	JLR recovery thesis, turnaround story
+Adani Ports.NS	Infrastructure	Capex heavy, pledging concerns
+Sun Pharma.NS	Pharma	US generics + India branded mix
+Titan.NS	Consumer	Premium brand, wedding cycle
+Coal India.NS	PSU	Dividend play, ESG transition
+Infosys.NS	IT	Guidance reliability (famous for accurate guidance)
+Maruti.NS	Auto	Market leadership, OEM transition
+ITC.NS	FMCG	Demerger story, cigarette cash cow
+ONGC.NS	Energy	Government capex, discovery cycle
+Divi's Labs.NS	Pharma	API manufacturing, raw material cycles
+Pidilite.NS	Specialty Chem	Pricing power thesis
+Asian Paints.NS	Paints	Volume vs. price debate
+Astral Poly.NS	Pipes	High-quality compounder
+Ad-hoc research companies (5 extra for on-demand pull demo):
+
+Jio Financial Services.NS (new, interesting)
+Nykaa.NS (e-commerce profitability journey)
+Paytm.NS (regulatory risk, management credibility)
+IRFC.NS (PSU bond fund, simple business)
+Polycab.NS (wires + cables, capacity expansion)
+5. Frontend Design
+Interaction Model Decision
+Recommended: Hybrid Chat + Feed (not a pure dashboard)
+
+The brief explicitly says "experiment" with interaction. The insight: a wealth manager doesn't stare at dashboards - they get notified, then drill in. So:
+
+Primary: Feed (Push) + Search (Pull)
+Secondary: Chat interface as a power-user layer
+Three screens:
+
+Screen 1: Feed (Push / Home)
+Top: Greeting + date + portfolio delta (total P&L today)
+Alert strip: Active alerts triggered today
+Digest: Scrollable card feed of announcements (sorted by priority)
+HIGH: Expanded card with AI summary
+MEDIUM: Compact card with 1-liner
+LOW: Collapsed, tap to expand
+Floating action button: Set alert thresholds
+Screen 2: Research (Pull)
+Search bar: "Research any NSE company..."
+Recent researches: chips/pills for quick access
+Tapping a portfolio company → full research view
+Research view: Tabs for each of the 8 modules
+"Narrative vs. Numbers" tab as the hero/default tab
+Screen 3: Portfolio
+Holdings list with sparklines
+Sector breakdown
+Top movers today
+Click any holding → goes to research view
+Design Language
+Dark, editorial aesthetic - midnight navy/deep slate bg, cream/white text
+Accent: Warm amber/gold (suits finance, avoids green/red as primary brand color)
+Typography: Inter (primary) + JetBrains Mono (numbers/tickers)
+Cards: Subtle borders, glass morphism for elevated cards
+Animations: Fade-in for feed items, slide-up for detail panels
+Mobile: Bottom navigation tabs, thumb-zone friendly
+Tech Stack Decision
+Frontend: React Native with Expo (OR React + responsive web)
+
+Given the deployment requirement ("deployed link, Expo/TestFlight, or responsive web"), a responsive web app is by far the easiest to share and demo:
+
+→ Next.js + Tailwind (or vanilla CSS)
+Deployed on Vercel (free, fast)
+Opens beautifully on mobile browser
+Can embed shadcn/ui for premium components
+Backend: FastAPI (Python)
+
+Handles data fetching, LLM calls, vector DB queries
+Deployed on Railway or Render (free tier)
+Exposes REST API consumed by frontend
+Database:
+
+SQLite for price history, announcement cache, user alert config
+ChromaDB (local/persistent) for vector embeddings
+6. Critical Design Decisions
+Decision 1: What to build first (MVP)
+Given "thin-but-working beats broad-but-broken":
+
+MVP Priority:
+
+Push digest (windowed) for 15-20 portfolio stocks
+Quarterly results extraction (Revenue, EBITDA, PBT, PAT QoQ/YoY)
+Management change enrichment (bio)
+Pull: Business snapshot + Narrative vs. Numbers
+Alert configuration UI
+Nice-to-have (if time):
+
+Full 8-module pull analysis
+Voice interaction
+Push notifications
+Decision 2: How to handle NSE scraping reliability
+NSE blocks scrapers aggressively. Strategy:
+
+Use nsetools and jugaad-trader Python libraries as primary
+Manual session cookie approach as backup
+Pre-populate the announcement cache at launch (not real-time)
+Store announcements in SQLite, refresh daily
+Decision 3: RAG vs. LLM-with-full-context
+For pull analysis, we have two approaches:
+
+RAG: Embed chunks, retrieve relevant sections → cheaper but may miss context
+Long-context LLM: Feed entire annual report PDF to Claude 3.5 (200k context) → more expensive but better synthesis
+Hybrid approach:
+
+Use RAG for specific numerical queries (faster, cheaper)
+Use long-context LLM for synthesis tasks (Narrative vs. Numbers, Bull/Bear)
+Cache all results aggressively
+Decision 4: Announcement classification - prompt vs. fine-tuned model
+Given we have 17 clearly defined categories with examples, a well-crafted prompt to Gemini Flash reliably classifies announcements. No fine-tuning needed. Accuracy should be ~95% on these clear categories.
+
+7. The "Narrative vs. Numbers" Module (Showcase Feature)
+This is what ENAM will love most - it's what they do professionally. Implementation:
+
+python
+def analyze_narrative_vs_numbers(ticker: str):
+    # Step 1: Extract guidance from last 4 concall transcripts
+    guidance = extract_guidance_statements(ticker)
+    # → {"Q1FY24_call": ["Revenue growth of 15-20% for FY25", "EBITDA margin 22-24%"], ...}
+    
+    # Step 2: Extract actual delivered financials from quarterly results
+    actuals = extract_quarterly_actuals(ticker)
+    # → {"Q1FY25": {"revenue_growth": 0.08, "ebitda_margin": 0.19}, ...}
+    
+    # Step 3: LLM synthesis
+    prompt = """
+    Given management's guidance and actual delivered results, analyze:
+    1. Was guidance conservative, accurate, or optimistic?
+    2. Which guidance items were consistently delivered vs. missed?
+    3. What does this imply about management's credibility?
+    
+    Be specific - compare numbers directly.
+    """
+    
+    return structured_analysis
+Example output card:
+
+📊 NARRATIVE vs NUMBERS — TCS FY24
+GUIDED:    "Double-digit revenue growth" (Apr'23 concall)
+DELIVERED: 4.1% revenue growth (FY24 results)
+VERDICT:   ⚠️ MISS — Management was overly optimistic about demand recovery
+GUIDED:    "Operating margin of 26-28%"  
+DELIVERED: 24.8% operating margin
+VERDICT:   ⚠️ MISS — Wage hikes + weak pricing compressed margins
+GUIDED:    "Strong deal wins of $10B+"
+DELIVERED: TCV of $11.2B
+VERDICT:   ✅ HIT — Pipeline guidance was accurate
+TRACK RECORD: 1/3 guidance metrics on target last 4 quarters
+CREDIBILITY:  Management tends to be optimistic on macro, 
+              accurate on deal flow
+8. Scoring Strategy vs. Competition
+What most submissions will do:
+Standard dashboard with charts
+Gemini API for summaries
+JSON from screener.in
+Chat interface
+What makes a top-10% submission:
+Primary source discipline: Actually parsing annual report PDFs + concall transcripts (not just using Wikipedia/news)
+Narrative vs. Numbers module: The only team that builds this properly wins
+Announcement priority logic: The judgment call of what "earns attention" - not just surfacing everything
+Design excellence: Mobile-first, feels premium, not a template
+Model routing: Demonstrating cheapness (show cost breakdown in writeup)
+The "any ticker" claim: Actually making it work on a company they didn't pick
+Writeup quality: Articulating trade-offs, deliberate choices, what was left out
+What to say in the covering email:
+What you built (clearly, no jargon)
+Key architectural decisions and why (model routing, RAG vs. full context)
+What you deliberately left out (and why - showing judgment)
+What you'd build next with more time (push notifications, voice, portfolio analytics)
+Cost breakdown: "Total API spend for demo: ~$X"
+9. Implementation Roadmap
+Day 1-2: Data Backend
+ Setup yfinance price fetch for all 20 portfolio stocks
+ Build NSE/BSE announcement scraper with category classifier
+ Build screener.in scraper for annual report + concall links
+ Build PDF downloader + pdfplumber text extractor
+ Setup ChromaDB + embedding pipeline (OpenAI text-embedding-3-small)
+ Test on 3-4 representative companies
+Day 3-4: AI Pipelines
+ Push: digest generator (sort + summarize)
+ Push: alert engine (EOD trigger check)
+ Push: management bio enrichment
+ Push: quarterly results extractor (Revenue/EBITDA/PBT/PAT)
+ Pull: RAG query engine
+ Pull: Narrative vs. Numbers module
+ Pull: Business snapshot module
+ FastAPI backend exposing all endpoints
+Day 5-6: Frontend
+ Design system (tokens + components)
+ Feed screen (Push)
+ Research screen (Pull)
+ Portfolio screen
+ Alert configuration
+ Mobile polish
+Day 7: Integration + Deployment
+ Connect frontend to backend
+ Pre-populate demo data
+ Deploy backend (Railway/Render)
+ Deploy frontend (Vercel)
+ Test on actual mobile device
+ Record demo
+10. Risks and Mitigations
+Risk	Mitigation
+NSE scraper gets blocked	Pre-cache announcements offline; use RSS fallback
+Screener.in layout changes	Store downloaded PDFs locally; don't re-fetch live
+LLM hallucination on numbers	Always cite source chunk; verify against structured yfinance data
+ChromaDB slow on large corpus	Index only last 3 years of filings; precompute embeddings
+Frontend looks basic	Use shadcn/ui + Framer Motion; invest heavily in design
+Demo crashes	Pre-populate entire demo flow with cached data
+PDF parsing fails	Fallback: use pdfminer, then PyMuPDF, then OCR (Tesseract)
+11. Key Insight: Why This Challenge Is Really About Judgment
+The brief says: "the judgment is the point." This appears 3+ times.
+
+Every design choice is a judgment:
+
+Which announcement categories get expanded cards vs. collapsed?
+What threshold defines "unusual" price movement?
+Which financial ratios appear in the snapshot?
+How long is a "short summary" for a management change?
+What does "strong deal wins" look like in numbers?
+The winners won't be the ones who built the most features. They'll be the ones whose judgment about what an investor cares about is demonstrably right. The writeup must articulate this judgment explicitly.
