@@ -28,13 +28,17 @@ def main():
     else:
         print(f"[*] Found existing database at: {DB_PATH}")
 
-    print("\n[*] Starting FINN HTTP Server on http://127.0.0.1:8000")
-    print("    - Mobile Web App: http://127.0.0.1:8000/")
-    print("    - Interactive API Docs: http://127.0.0.1:8000/docs")
+    print(f"\n[*] Starting FINN HTTP Server on http://{host}:{port}")
+    print("    - Mobile Web App: http://{host}:{port}/")
+    print("    - Interactive API Docs: http://{host}:{port}/docs")
     print("=" * 65 + "\n")
 
     import uvicorn
-    uvicorn.run("backend.main:app", host="127.0.0.1", port=8000, reload=True)
+    # Render / Railway use PORT env variable; local dev defaults to 8000
+    port = int(os.environ.get("PORT", 8000))
+    host = "0.0.0.0"  # Listen on all interfaces for cloud deployment
+    reload = os.environ.get("ENVIRONMENT") != "production"
+    uvicorn.run("backend.main:app", host=host, port=port, reload=reload)
 
 if __name__ == "__main__":
     main()

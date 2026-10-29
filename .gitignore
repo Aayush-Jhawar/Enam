@@ -32,10 +32,11 @@ ENV/
 .env
 .env.local
 
-# Databases & Large Media
-*.db
+# Databases - commit finn.db for demo data; ignore chroma & large temp DBs
 backend/chroma_db/
 backend/data/pdfs/
+# Exclude only non-finn DBs (test artifacts etc.)
+test_*.db
 
 # OS / Editor Artifacts
 .DS_Store
