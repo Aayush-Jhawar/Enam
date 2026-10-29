@@ -212,19 +212,19 @@ def build_index_for_company(db: Session, ticker: str, max_docs: int = 3) -> Dict
     docs = scrape_screener_documents(clean_ticker)
     total_chunks = []
 
-    # Process Annual Reports
+    # Process Annual Reports (sample first 35 pages containing Director's Report & MD&A)
     for idx, ar in enumerate(docs.get("annual_reports", [])[:max_docs]):
         pdf_path = download_pdf(ar["url"], clean_ticker, "ar", idx)
         if pdf_path:
-            text = extract_text_from_pdf(pdf_path, max_pages=80)
+            text = extract_text_from_pdf(pdf_path, max_pages=35)
             chunks = chunk_text(text, clean_ticker, doc_type="annual_report", period=f"AR_{idx+1}")
             total_chunks.extend(chunks)
 
-    # Process Concall Transcripts
+    # Process Concall Transcripts (full transcript typically 15-25 pages)
     for idx, cc in enumerate(docs.get("concalls", [])[:max_docs]):
         pdf_path = download_pdf(cc["url"], clean_ticker, "concall", idx)
         if pdf_path:
-            text = extract_text_from_pdf(pdf_path, max_pages=40)
+            text = extract_text_from_pdf(pdf_path, max_pages=25)
             chunks = chunk_text(text, clean_ticker, doc_type="concall", period=f"Q{idx+1}")
             total_chunks.extend(chunks)
 

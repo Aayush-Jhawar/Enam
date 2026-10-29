@@ -4,9 +4,11 @@ FastAPI backend providing institutional-grade Push (Windowed Digest, Alert Engin
 and Pull (Primary Grounded Fundamental Research Suite & Any-Ticker Analyzer).
 """
 import logging
+import os
 from typing import Optional, List, Dict, Any
 from fastapi import FastAPI, Depends, Query, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -200,9 +202,6 @@ def audit_compute_costs(db: Session = Depends(get_db)):
 
 
 # ── Mount Frontend Static Web Application ───────────────────────────────────
-import os
-from fastapi.staticfiles import StaticFiles
-
 FRONTEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend")
 if os.path.exists(FRONTEND_DIR):
     app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
