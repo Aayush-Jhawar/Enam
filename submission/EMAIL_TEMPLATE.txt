@@ -1,0 +1,54 @@
+TO: assessment@enam.com
+SUBJECT: ENAM - IIT screening - 2027
+
+Dear ENAM Holdings Team,
+
+Please find below my submission for the ENAM Holdings AI Engineer Build Challenge (Screening 2027).
+
+----------------------------------------------------------------------
+SUBMISSION LINKS & DETAILS
+----------------------------------------------------------------------
+1. Deployed Mobile Prototype:
+   https://finn-enam.onrender.com/
+   (Or local run via single command: python run.py)
+
+2. GitHub Repository:
+   https://github.com/Aayush-Jhawar/Enam
+
+3. AI Build History & Agent Logs:
+   Included in the attached zip archive and available in the repo under:
+   https://github.com/Aayush-Jhawar/Enam/tree/main/submission/ai_build_history
+
+----------------------------------------------------------------------
+COVERING NOTE SUMMARY
+----------------------------------------------------------------------
+Candidate: Aayush Jhawar (IIT)
+Product: FINN (Financial Investment Agent)
+
+1. What Was Built:
+A mobile-first equity intelligence platform built around the daily workflow and primary-data discipline of an institutional value investor at ENAM Holdings:
+- Push Mode (Proactive Intelligence): Windowed digests (24h, 48h, 7d) collapsing routine compliance paperwork into an expandable vault, while prominently surfacing material filings (QoQ/YoY results tables in ₹ Cr, executive background summaries, and M&A/litigation details). Includes threshold-triggered alerts for volume anomalies and price swings.
+- Pull Mode (Primary Grounded Research): Strict grounding in Annual Reports and Concall Transcripts across 8 fundamental modules, headlined by "Narrative vs. Numbers" — an objective 4-quarter management credibility audit scoring promises vs. delivered results.
+- Generalization: Dynamically indexes and researches any NSE ticker (not hardcoded to the 20-stock demo portfolio).
+- Reliability: 29 out of 29 automated endpoint checks passing, with deterministic fallbacks ensuring zero-crash offline execution without requiring API keys.
+
+2. Key Decisions & Architecture Trade-offs:
+- SQLite-backed TF-IDF vector retrieval: Guaranteed sub-10ms queries, zero API costs, and 100% determinism over brittle cloud vector DB dependencies.
+- Tiered Model Routing & Token Auditing: Cheap models for bulk extraction and categorization, frontier reasoning models for narrative/credibility analysis, with per-call token and dollar cost logging.
+- Mobile-first responsive web client: Immediate preview on any smartphone or browser with zero installation friction.
+
+3. Deliberately Left Out:
+- Macro commentary and broker notes: Excluded to eliminate consensus bias and noise; differentiated edge lives in primary disclosures.
+- Intraday technical charting: Omitted because bottom-up value investing is driven by cash flow quality and capital allocation, not chart patterns.
+- Unconstrained multi-agent swarms: Replaced by a typed, deterministic pipeline to prevent token burn and hallucination loops.
+
+4. Where We Would Take It Next:
+- Forensic scanner for Notes to Accounts (Related Party Transactions, auditor qualifications, contingent liabilities).
+- Earnings call audio acoustic analysis to detect vocal hesitation or tone shifts.
+- Automated peer cohort multi-bagger matrices across listed and unlisted competitors.
+
+The complete covering note, architecture documentation, and codebase are attached.
+
+Best regards,
+Aayush Jhawar
+IIT
