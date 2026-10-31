@@ -38,6 +38,10 @@ backend/data/pdfs/
 # Exclude only non-finn DBs (test artifacts etc.)
 test_*.db
 
+# Live agent logs and zip bundles (kept in local submission/ for email attachment)
+*.jsonl
+*.zip
+
 # OS / Editor Artifacts
 .DS_Store
 Thumbs.db

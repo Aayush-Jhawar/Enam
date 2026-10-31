@@ -1,27 +1,39 @@
 # FINN: Financial Investment Agent — Covering Note
 **Submission for ENAM Holdings AI Engineer Build Challenge (Screening 2027)**  
+**Candidate:** Aayush Jhawar (IIT)  
 **To:** `assessment@enam.com`  
-**Subject:** `ENAM - IIT screening - 2027`
+**Subject:** `ENAM - IIT screening - 2027`  
+**GitHub Repository:** [https://github.com/Aayush-Jhawar/Enam](https://github.com/Aayush-Jhawar/Enam)  
+**Live Deployed Application:** [https://finn-enam.onrender.com/](https://finn-enam.onrender.com/)  
+
+---
+
+### Executive Summary & Domain Genesis
+
+During my summer internship building an institutional market intelligence platform ([Oil Market Dashboard](https://github.com/Aayush-Jhawar/Oil_Market_Dashboard)), I grappled firsthand with the core dilemma of market analysis: financial markets produce an overwhelming flood of noisy time-series data, speculative headlines, and sell-side commentary, yet true differentiated signal resides strictly in **primary, structural data**.
+
+When analyzing ENAM Holdings' challenge brief, it became clear that public-markets value investing suffers from the exact same pathology: an analyst at ENAM is inundated with daily exchange filings, macro noise, and compliance paperwork. Applying the lessons from my internship to ENAM's patient, bottom-up investment philosophy (pioneered by Nemish Shah), I formulated the architecture of **FINN**:
+1. **Push Mode (The Daily Morning Routine):** A proactive, windowed digest that ruthlessly filters out administrative compliance paperwork while surfacing high-conviction events with structured extractions (Revenue, Operating EBITDA, PBT, PAT deltas, and executive management backgrounds).
+2. **Pull Mode (Primary Grounded Research):** Strictly grounded in Annual Reports and Concall Transcripts — zero broker notes, zero news, zero LLM hallucinations.
+3. **The Crown Jewel ("Narrative vs. Numbers"):** A 4-quarter audit comparing management's forward commentary and guidance against subsequent actual delivered financials, generating an objective credibility score.
+
+I conducted the complete domain brainstorming, financial ontology formulation, and architectural design, while directing an autonomous AI coding agent strictly as a technical implementation copilot to write the backend endpoints, database models, vector indexers, and automated test suites.
 
 ---
 
 ### 1. What Was Built
 
-We built **FINN** — a mobile-first financial investment agent designed specifically around the daily workflow and primary-data discipline of an institutional public-markets investor at ENAM Holdings. 
+FINN is a mobile-first equity intelligence agent built to save hours of an investor's day by giving them a focused, judgment-driven canvas:
 
-FINN resolves the fundamental tension between **Push** (proactive, event-driven filtering) and **Pull** (on-demand, rigorous fundamental research) through a dual-mode engine:
-
-#### A. Push Mode: The Investor's Daily Morning Routine
-- **Windowed Digest (24h, 48h, 7d):** Filters exchange disclosures across the 20-company portfolio. Routine paperwork (ESOPs, compliance forms) is cleanly collapsed into an expandable drawer, while high-conviction events are expanded front-and-center.
-- **Judgment-Driven Presentation:**
-  - *Quarterly Results:* Instantly extracts headline metrics — Revenue, Operating EBITDA, PBT, and PAT — with QoQ and YoY delta pills in Crores (₹ Cr).
-  - *Management Changes:* Bypasses raw regulatory text to surface incoming executive background, past institutional pedigree, and mandate.
-  - *M&A / Litigation:* Highlights transaction value, strategic rationale, and legal exposure.
-- **Triggered Threshold Alerts:** Watches EOD prices and trading volumes against user-configurable criteria (e.g., daily swing $\ge \pm 5\%$, volume $\ge 2\times$ 20-day average, or material filings).
+#### A. Push Mode: Proactive Event Filtering & Alerts
+- **Windowed Digest (24h, 48h, 7d):** Filters corporate announcements across the 20-company portfolio. Routine compliance paperwork (ESOP allotments, trading window closures, secretarial returns) is collapsed into an expandable vault, while material disclosures are highlighted.
+- **Results Headline Extractor:** Instantly converts quarterly financial results into standardized tables showing **Revenue, Operating EBITDA, PBT, and PAT** with QoQ and YoY delta percentages in Crores (₹ Cr).
+- **Executive Management Bio Enrichment:** Automatically extracts incoming executive names, new roles, actions (joining vs. resigning), and prior corporate pedigree.
+- **Threshold-Triggered Alerts:** Monitors EOD prices and volumes against user-configurable criteria (e.g., daily price swings $\ge \pm 5\%$, volume surges $\ge 2.0\times$ 20-day average volume, or material litigation/M&A).
 
 #### B. Pull Mode: Primary-Source Fundamental Research Suite
-Grounded strictly in **Annual Reports (ARs)** and **Earnings Call Transcripts** — zero broker notes, zero media noise, zero unverified LLM hallucinations. Covers 8 structured modules:
-1. **Business Snapshot:** Segment revenue contribution, operating model, and structural competitive moats.
+Grounded strictly in **Annual Reports (ARs)** and **Earnings Call Transcripts** across 8 structured modules:
+1. **Business Snapshot:** Business model, segmental revenue contribution, and structural competitive moats.
 2. **Financial Snapshot:** 9-factor fundamental health metrics (Revenue, EBITDA margins, PAT, P/E, ROE, ROCE, D/E).
 3. **Multi-Year Trajectory:** 3-year CAGR, expanding product lines vs. compressing legacy lines.
 4. **Balance Sheet & Leverage:** Gross vs. Net Debt, D/E ratio, working capital cycle, and debtor/inventory days.
@@ -31,7 +43,7 @@ Grounded strictly in **Annual Reports (ARs)** and **Earnings Call Transcripts** 
 8. **Bull vs. Bear Case:** 3 high-conviction structural tailwinds vs. 3 key operational/cyclical failure modes.
 
 #### C. Generalization Beyond Demo Portfolio
-The engine is not hardcoded to the 20 demo stocks; querying any arbitrary NSE symbol (e.g., `SBIN`, `TATACONSUM`, `BAJAJ-AUTO`) dynamically fetches fundamentals, extracts primary document sections, synthesizes the 8 modules, and caches the result for sub-50ms repeat retrieval.
+The engine is not hardcoded to the 20 demo stocks; querying any arbitrary NSE symbol (e.g., `POLYCAB`, `SBIN`, `TATACONSUM`) dynamically scrapes Screener.in for primary filings, extracts MD&A text, chunks and indexes into the vector store, and synthesizes the 8 research modules on the fly.
 
 ---
 
@@ -68,3 +80,14 @@ The engine is not hardcoded to the 20 demo stocks; querying any arbitrary NSE sy
 2. **Management Voice Tone & Hesitation Analysis:** Audio acoustic analysis of earnings call recordings to flag vocal stress or hesitation when answering difficult analyst questions.
 3. **Peer Cohort Multi-Bagger Matrix:** Automated peer comparison across unlisted vs. listed competitors within the same sub-sector.
 
+---
+
+### 5. Verification & Audit Results
+
+FINN has been validated using a 29-point automated ASGI health-check script (`check_endpoints.py`):
+- **Health & DB Integrity:** 25 companies, 775 EOD prices, 10 active alerts (PASSED)
+- **Push Mode:** 24h/48h/7d windowed digests & results enrichments (PASSED)
+- **Alert Mutability:** Config threshold updates & dismissal lifecycle (PASSED)
+- **Pull Mode:** All 8 modules verified with structured schemas (PASSED)
+- **Ad-Hoc Generalization:** Tested and verified on `POLYCAB` (PASSED)
+- **Total Endpoint Pass Rate:** **29 / 29 checks passed (100%)**

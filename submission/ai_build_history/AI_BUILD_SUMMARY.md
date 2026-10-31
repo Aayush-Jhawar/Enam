@@ -11,14 +11,14 @@
 In accordance with the challenge brief (*"We want to see how you work with the tools, not just the finished code"*), this document chronicles how **FINN** was conceptualized, built, tested, and audited using an autonomous coding agent.
 
 ### Build Metrics
-- **Total Agent Actions / Steps:** 391 logged events
+- **Total Agent Actions / Steps:** 539 logged events
 - **Tool Invocations:**
-- `run_command`: 71 invocations
-- `read_file`: 47 invocations
-- `manage_task`: 25 invocations
-- `write_file`: 23 invocations
+- `run_command`: 104 invocations
+- `read_file`: 51 invocations
+- `manage_task`: 46 invocations
+- `write_file`: 30 invocations
 - `edit_file`: 14 invocations
-- `schedule`: 5 invocations
+- `schedule`: 8 invocations
 - `search_web`: 1 invocations
 - `list_plugin_accounts`: 1 invocations
 
