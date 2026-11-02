@@ -93,8 +93,9 @@ python run.py
 ```
 
 ### Accessing the Prototype
-* **Mobile-First Web App:** Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
-* **Interactive API Documentation:** Open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+* **Live Deployed Prototype:** [https://finn-enam-1tdf.onrender.com/](https://finn-enam-1tdf.onrender.com/)
+* **Mobile-First Web App (Local):** Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
+* **Interactive API Documentation:** Open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) (or on live site: [/docs](https://finn-enam-1tdf.onrender.com/docs))
 
 *(Note: The web app includes a built-in "Toggle Full Screen / Mobile Frame" button in the header so you can preview the mobile experience directly on desktop or on a smartphone over local WiFi).*
 
