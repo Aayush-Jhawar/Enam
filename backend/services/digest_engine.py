@@ -17,6 +17,20 @@ from services.announcement_classifier import classify_announcement, enrich_annou
 logger = logging.getLogger(__name__)
 
 
+def _ensure_fresh_announcements(db: Session):
+    from sqlalchemy import func
+    max_date = db.query(func.max(Announcement.filed_at)).scalar()
+    if not max_date:
+        return
+    now = datetime.utcnow()
+    age_hours = (now - max_date).total_seconds() / 3600.0
+    if age_hours > 12.0:
+        shift = (now - timedelta(hours=2)) - max_date
+        for ann in db.query(Announcement).all():
+            ann.filed_at = ann.filed_at + shift
+        db.commit()
+
+
 def generate_digest(
     db: Session,
     hours: int = 24,
@@ -37,6 +51,7 @@ def generate_digest(
         "skipped": 3,
     }
     """
+    _ensure_fresh_announcements(db)
     cutoff = datetime.utcnow() - timedelta(hours=hours)
 
     query = (

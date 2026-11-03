@@ -6,7 +6,7 @@ and Pull (Primary Grounded Fundamental Research Suite & Any-Ticker Analyzer).
 import logging
 import os
 from typing import Optional, List, Dict, Any
-from fastapi import FastAPI, Depends, Query, HTTPException, status
+from fastapi import FastAPI, Depends, Query, HTTPException, status, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -46,6 +46,11 @@ app.add_middleware(
 def startup_event():
     init_db()
     logger.info("FINN API initialized successfully.")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return Response(status_code=204)
 
 
 # ── Health & Diagnostics ────────────────────────────────────────────────────

@@ -38,7 +38,9 @@ def main():
     print("=" * 65 + "\n")
 
     import uvicorn
-    reload = os.environ.get("ENVIRONMENT") != "production"
+    # Disable watchfiles in cloud (Render/Railway) to prevent SQLite file writes from triggering reloads
+    is_cloud = bool(os.environ.get("RENDER") or os.environ.get("RAILWAY_STATIC_URL") or os.environ.get("ENVIRONMENT") == "production")
+    reload = not is_cloud
     uvicorn.run("backend.main:app", host=host, port=port, reload=reload)
 
 if __name__ == "__main__":
