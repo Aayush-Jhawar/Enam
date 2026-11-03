@@ -16,7 +16,7 @@
 >  
 > *Let us build it properly now. First check the requirements and note that my intern project is not taken as primary reference but the actual PS. Then move on in the checklist to complete tasks.*  
 >  
-> *Look at the files created till now and Brainstorm.txt."*
+> *Look at the files created till now and Brainstorm.txt I have made to adapt my idea to this PS."*
 
 #### 🤖 Coding Agent:
 > Ingested both problem statement documents:
